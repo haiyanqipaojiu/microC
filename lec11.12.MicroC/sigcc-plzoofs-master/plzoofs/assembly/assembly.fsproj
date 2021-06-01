@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+  <FsLex Include="CLex.fsl">
+  <OtherFlags>--module CLex --unicode</OtherFlags>
+</FsLex>
+<FsYacc Include="CPar.fsy">
+    <OtherFlags>--module CPar</OtherFlags>
+</FsYacc>
+ 
+    <Compile Include="Absyn.fs" />
+    <!-- <Compile Include="Debug.fs" /> -->
+    <Compile Include="CPar.fs" />
+    <Compile Include="CLex.fs" />
+    <Compile Include="Parse.fs" />
+    <Compile Include="X86.fs" />
+    <Compile Include="X86Comp.fs" />  
+    <Compile Include="X64.fs" />
+    <Compile Include="X64Comp.fs" />  
+    <Compile Include="ParseAndComp.fs" />  
+    <Compile Include="MicroCCAsm.fs" />
+
+
+  </ItemGroup>
+  <ItemGroup>
+
+<!-- <MyItem Include="ex1.c" /> -->
+<!-- <MyItem Include="ex9.c" /> -->
+<MyItem Include="ex10.c" />
+<!-- <MyItem Include="array.c" /> -->
+<!-- <MyItem Include="ex2t.c" /> -->
+<!-- <MyItem Include="ex2.c" /> -->
+</ItemGroup>
+
+<Target Name="ccrun">
+<Exec Command="
+echo -----------compile------------
+dotnet run %(MyItem.FileName).c
+echo -------assemble and link-------
+nasm -f win32 -o %(MyItem.FileName).o %(MyItem.FileName).asm
+rem nasm -f elf32 -o %(MyItem.FileName).o %(MyItem.FileName).asm
+gcc -m32 -c driver.c
+gcc -m32 -g -o %(MyItem.FileName).exe %(MyItem.FileName).o driver.o
+echo -------------run x86-----------
+%(MyItem.FileName).exe 6 
+ "/>
+</Target>
+
+<Target Name="cclean">
+<Exec Command="
+echo -----------clean------------
+del *.ins *.insx86 *.out *.asm *.o  ex*.exe *.obj
+"/> 
+</Target>
+
+  <ItemGroup>
+    <PackageReference Include="FsLexYacc" Version="10.2.0" />
+  </ItemGroup>
+
+</Project>

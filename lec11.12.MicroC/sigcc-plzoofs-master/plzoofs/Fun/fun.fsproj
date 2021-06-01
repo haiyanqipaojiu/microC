@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+<FsLex Include="FunLex.fsl">
+  <OtherFlags>--module FunLex --unicode</OtherFlags>
+</FsLex>
+<FsYacc Include="FunPar.fsy">
+    <OtherFlags> -v --module FunPar</OtherFlags>
+</FsYacc>
+    <Compile Include="Main.fsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FsLexYacc" Version="10.2.0" />
+  </ItemGroup>
+
+</Project>

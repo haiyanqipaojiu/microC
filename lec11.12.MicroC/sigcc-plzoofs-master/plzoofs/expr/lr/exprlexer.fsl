@@ -1,0 +1,21 @@
+{ 
+open FSharp.Text.Lexing
+open Exprparser
+
+let lexemeAsString lexbuf = 
+    LexBuffer<char>.LexemeString lexbuf
+}
+
+let numeric = ['0' - '9']
+let letter =['a' - 'z' 'A' - 'Z']
+
+rule token = parse
+| "+"   {Plus_token}
+| "-"   {Minus_token}
+| "*"   {Times_token}
+| "/"   {Divide_token}
+| "("   {Left_parenthesis}
+| ")"   {Right_parenthesis}
+| letter (letter|numeric|"_")*  {Id_token (lexemeAsString lexbuf)}
+| [' ' '\t' '\n'] {token lexbuf}
+| eof {EOL}

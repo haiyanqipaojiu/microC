@@ -1,0 +1,7 @@
+bin/**/*
+obj/**
+output/**
+portml2fs.md
+llparser.fsi
+llparser.fs
+lllexer.fs

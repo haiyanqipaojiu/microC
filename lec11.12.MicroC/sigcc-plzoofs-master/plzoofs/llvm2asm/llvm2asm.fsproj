@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="fslexyacc" Version="10.2.0" />
+
+      <FsLex Include="lllexer.fsl">
+      <OtherFlags>--module Lllexer --unicode</OtherFlags>
+    </FsLex>
+   <FsYacc Include="llparser.fsy">
+      <OtherFlags>--module Llparser</OtherFlags>
+    </FsYacc>
+    <Compile Include="args.fs" />
+    <Compile Include="debug.fs" />
+    <Compile Include="platform.fs" />
+    <Compile Include="x86.fs" />
+    <Compile Include="ll.fs" />
+    <Compile Include="llparser.fs" />
+    <Compile Include="lllexer.fs" />
+    <Compile Include="backend.fs" />
+    <Compile Include="driver.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+</Project>

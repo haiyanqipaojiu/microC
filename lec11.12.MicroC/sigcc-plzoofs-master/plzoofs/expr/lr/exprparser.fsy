@@ -1,0 +1,30 @@
+%{
+open Absyn 
+%}
+
+%token <string> Id_token
+%token Left_parenthesis Right_parenthesis
+%token Times_token Divide_token
+%token Plus_token Minus_token
+%token EOL
+
+%start main
+%type <expr> main
+
+%%
+
+main:  expr EOL { $1 }
+
+expr: term { Term_as_Expr $1 }
+| term Plus_token expr { Plus_Expr ($1, $3) }
+| term Minus_token expr { Minus_Expr ($1, $3) }
+
+term: factor { Factor_as_Term $1 }
+| factor Times_token term { Mult_Term ($1, $3) }
+| factor Divide_token term { Div_Term ($1, $3) }
+
+factor: Id_token { Id_as_Factor $1 }
+| Left_parenthesis expr Right_parenthesis {Parenthesized_Expr_as_Factor $2 }
+
+%%
+

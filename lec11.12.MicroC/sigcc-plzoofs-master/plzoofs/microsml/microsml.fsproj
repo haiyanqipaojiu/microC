@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+  <FsLex Include="FunLex.fsl">
+  <OtherFlags>--module FunLex --unicode</OtherFlags>
+</FsLex>
+<FsYacc Include="FunPar.fsy">
+    <OtherFlags>--module FunPar</OtherFlags>
+</FsYacc>
+ 
+    <Compile Include="Absyn.fs" />
+    <!-- <Compile Include="Debug.fs" /> -->
+    <Compile Include="FunPar.fs" />
+    <Compile Include="FunLex.fs" />
+    <Compile Include="TypeInference.fs" />
+    <Compile Include="HigherFun.fs" />
+    <Compile Include="Machine.fs" />  
+    <Compile Include="Comp.fs" />  
+    <!-- <Compile Include="ContComp.fs" />   -->
+    <Compile Include="ParseTypeAndRun.fs" />  
+    <Compile Include="MicroSMLC.fs" />
+
+    <MyItem Include="ex01.sml" />
+    <MyItem Include="ex02.sml" />
+    <MyItem Include="ex03.sml" />
+    <MyItem Include="ex04.sml" />
+    <MyItem Include="ex05.sml" />
+    <!-- <MyItem Include="ex06.sml" />
+    <MyItem Include="exn01.sml" />
+    <MyItem Include="exn02.sml" />
+    <MyItem Include="exn03.sml" />
+    <MyItem Include="exn04.sml" />
+    <MyItem Include="exn05.sml" /> -->
+    <MyItem Include="exn06.sml" />
+
+  </ItemGroup>
+
+<Target Name="ccrun">
+<Exec Command="
+echo -----------compile------------
+dotnet run -verbose %(MyItem.FileName).sml
+
+echo -------assemble and link-------
+gcc -m32 -o msmlmachine msmlmachine.c
+
+echo -------------run svm-----------
+msmlmachine.exe %(MyItem.FileName).out
+"/> 
+</Target>
+<Target Name="cclean">
+<Exec Command="
+echo -----------clean------------
+del   *.out  *.o  *.obj
+"/> 
+</Target>
+
+  <ItemGroup>
+    <PackageReference Include="FsLexYacc" Version="10.2.0" />
+  </ItemGroup>
+
+</Project>

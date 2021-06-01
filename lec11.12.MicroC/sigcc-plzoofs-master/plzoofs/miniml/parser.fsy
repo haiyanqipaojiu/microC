@@ -1,0 +1,90 @@
+%{
+  open Syntax
+%}
+
+%token TINT
+%token TBOOL
+%token TARROW
+%token <Syntax.name> VAR
+%token <int> INT
+%token TRUE FALSE
+%token PLUS
+%token MINUS
+%token TIMES
+%token EQUAL LESS
+%token IF THEN ELSE
+%token FUN IS
+%token COLON
+%token LPAREN RPAREN
+%token LET
+%token SEMISEMI
+%token EOF
+
+%start file
+%type <Syntax.command list> file
+
+%start toplevel
+%type <Syntax.command> toplevel
+
+%nonassoc IS
+%nonassoc ELSE
+%nonassoc EQUAL LESS
+%left PLUS MINUS
+%left TIMES
+%right TARROW
+
+%%
+
+file:
+  | EOF                           { [] }
+  | expr EOF                  { [Expr $1] }
+  | expr SEMISEMI file  { Expr  $1:: $3 }
+  | nonempty_list(def) SEMISEMI file { $1 @ $3 }
+  | nonempty_list(def) EOF   { $1 }
+
+toplevel:
+  | def SEMISEMI { $1 }
+  | expr SEMISEMI { Expr $1 }
+
+def:
+  | LET VAR EQUAL expr { Def ($2, $4) }
+
+expr: mark_position(plain_expr) { $1 }
+
+plain_expr:
+  | plain_app_expr { $1 }
+  | MINUS INT { Int (-$2) }
+  | expr PLUS expr	{ Plus ($1, $3) }
+  | expr MINUS expr { Minus ($1, $3) }
+  | expr TIMES expr { Times ($1, $3) }
+  | expr EQUAL expr { Equal ($1, $3) }
+  | expr LESS expr { Less ($1, $3) }
+  | IF expr THEN expr ELSE expr { If ($2, $4, $6) }
+  | FUN VAR LPAREN VAR COLON ty RPAREN COLON ty IS expr { Fun ($2, $4, $6, $9, $11) }
+
+app_expr: mark_position(plain_app_expr) { $1 }
+
+plain_app_expr:
+  | plain_simple_expr { $1 }
+  | app_expr simple_expr { Apply ($1, $2) }
+
+simple_expr: mark_position(plain_simple_expr) { $1 }
+
+plain_simple_expr:
+  | VAR { Var $1 }
+  | TRUE    { Bool true }
+  | FALSE   { Bool false }
+  | INT { Int $1 }
+  | LPAREN plain_expr RPAREN	{ $2 }    
+
+ty:
+  | TBOOL { TBool }
+  | TINT { TInt }
+  | ty TARROW ty { TArrow ($1, $2) }
+  | LPAREN ty RPAREN { $2 }
+
+mark_position(X): x = X
+  { Zoo.locate ~loc:(Zoo.make_location $startpos $endpos) x }
+
+%%
+

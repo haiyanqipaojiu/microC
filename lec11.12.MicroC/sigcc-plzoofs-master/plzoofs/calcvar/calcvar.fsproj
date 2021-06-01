@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <FsLex Include="lexer.fsl">
+      <OtherFlags>--module Lexer --unicode</OtherFlags>
+    </FsLex>
+   <FsYacc Include="parser.fsy">
+      <OtherFlags>--module Parser</OtherFlags>
+    </FsYacc>
+
+    <Compile Include="syntax.fs" />
+    <Compile Include="parser.fs" />
+    <Compile Include="lexer.fs" />
+    <Compile Include="eval.fs" />
+    <Compile Include="calc_var.fs" />
+    <Compile Include="main.fs" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="fslexyacc" Version="10.2.0" />
+    <!-- <PackageReference Include="FsLexYacc.Runtime" Version="10.2.0" /> -->
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+main.native
+calculator
+calculator.s
+.merlin
+obj/*
+.ocamlinit
+Makefile
+runtime.s
+bin/*
+*.exe
+*.o

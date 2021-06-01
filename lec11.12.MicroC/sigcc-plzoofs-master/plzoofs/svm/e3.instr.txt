@@ -1,0 +1,1 @@
+SCstI 5, SCstI 4, SSub, SCstI 100, SVar 1, SMul, SSwap, SPop

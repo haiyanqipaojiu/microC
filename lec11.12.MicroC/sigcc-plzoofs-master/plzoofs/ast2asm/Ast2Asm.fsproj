@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="platform.fs" />
+    <Compile Include="x86.fs" />
+    <Compile Include="compile.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+  <Target Name = "ccrun">
+  <Exec Command = "
+
+dotnet run > calculator.s
+type calculator.s
+gcc -O0 -fno-asynchronous-unwind-tables -S runtime.c  
+gcc -g -o calculator runtime.s calculator.s   
+calculator 1 2 3 4 5 6 7 8
+  
+"/>
+  </Target>
+</Project>

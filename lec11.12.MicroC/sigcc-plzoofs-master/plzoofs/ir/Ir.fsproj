@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="ir1.fs" />
+    <Compile Include="ir2.fs" />
+    <Compile Include="ir3.fs" />
+    <Compile Include="ir4.fs" />
+    <Compile Include="ir5.fs" />
+    <Compile Include="ir-by-hand.fs" />
+    <Compile Include="main1.fs" />
+    <Compile Include="main2.fs" />
+    <Compile Include="main3.fs" />
+    <Compile Include="run.fsx" />
+  </ItemGroup>
+</Project>

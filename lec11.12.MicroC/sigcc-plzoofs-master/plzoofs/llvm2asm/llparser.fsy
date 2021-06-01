@@ -1,0 +1,286 @@
+%{ 
+open Ll
+open Ll.Parsing
+%}
+
+// (* Symbols *)
+%token STAR          //   (* * *)    
+%token COMMA         //   (* , *)
+%token COLON         //   (* : *)
+%token EQUALS        //   (* = *)
+%token LPAREN        //   (* ( *)
+%token RPAREN        //   (* ) *)
+%token LBRACE        //   (* { *)
+%token RBRACE        //   (* } *)
+%token LBRACKET      //   (* [ *)
+%token RBRACKET      //   (* ] *)
+%token EOF
+
+//(* Reserved Words *)
+%token CROSS            //(* x *)
+%token I1               //(* i1 *)
+%token I8               //(* i8 *)
+%token I32              //(* i32 *)
+%token I64              //(* i64 *)
+%token TO               //(* to *)
+%token BR               //(* br *)
+%token EQ               //(* eq *)
+%token NE               //(* ne *)
+%token OR               //(* or *)
+%token AND              //(* and *)
+%token ADD              //(* add *)
+%token SUB              //(* sub *)
+%token MUL              //(* mul *)
+%token XOR              //(* xor *)
+%token SLT              //(* slt *)
+%token SLE              //(* sle *)
+%token SGT              //(* sgt *)
+%token SGE              //(* sge *)
+%token SHL              //(* shl *)
+%token RET              //(* ret *)
+%token TYPE             //(* type *)
+%token NULL             //(* null *)
+%token LSHR             //(* lshr *)
+%token ASHR             //(* ashr *)
+%token CALL             //(* call *)
+%token ICMP             //(* icmp *)
+%token VOID             //(* void *)
+%token LOAD             //(* load *)
+%token STORE            //(* store *)
+%token LABEL            //(* label *)
+%token ENTRY            //(* entry *)
+%token GLOBAL           //(* global *)
+%token DEFINE           //(* define *)
+%token ALLOCA           //(* alloca *)
+%token BITCAST          //(* bitcast *)
+%token GEP              //(* getelementptr *)
+
+%token <int64> INT        //(* int64 values *)
+%token <string> LBL     //(* labels *)
+%token <string> GID     //(* global identifier *)
+%token <string> UID     //(* local identifier *)
+%token <string> STRING  //(* string literals *)
+
+%start  prog
+%type <Ll.prog> prog
+%%
+
+prog:
+  | decls EOF
+    { $1 }
+
+decls:
+  |  decls_rev
+    { { tdecls = List.rev ($1).tdecls
+      ; gdecls = List.rev ($1).gdecls
+      ; fdecls = List.rev ($1).fdecls
+    } }
+
+decls_rev:
+  |  { { tdecls = [] ; gdecls = [] ; fdecls = [] } } // (* empty *)
+  |  decls_rev fdecl
+    { { $1 with fdecls = $2 :: $1.fdecls }  }
+  | decls_rev gdecl
+    { { $1 with gdecls = $2 :: $1.gdecls }  }
+  | decls_rev tdecl
+    { { $1 with tdecls = $2 :: $1.tdecls }  }
+
+fdecl:
+  | DEFINE ty GID LPAREN arg_list RPAREN
+    LBRACE entry_block block_list RBRACE
+    { ($3, { fty = (List.map fst $5, $2)
+          ; param = List.map snd $5
+          ; cfg = ($8, $9)
+          }
+    ) }
+
+gdecl:
+  | GID EQUALS GLOBAL ty ginit
+    { ($1, ($4,$5)) }
+
+tdecl:
+  | UID EQUALS TYPE ty
+    { ($1, $4) }
+
+
+nonptr_ty: 
+  | VOID { Void }
+  | I1 { Ll.I1 }
+  | I8 { Ll.I8 }    
+  | I64 { Ll.I64 }
+  | LBRACE ty_list RBRACE
+    { Ll.Struct $2 }
+  | LBRACKET INT CROSS ty RBRACKET
+    { Ll.Array (int ($2),$4) }
+  | ty LPAREN ty_list RPAREN
+    { Ll.Fun ($3, $1) }
+  | UID
+    { Ll.Namedt $1 }
+
+ty:
+  | ty STAR
+    { Ptr $1 }
+  | nonptr_ty
+    { $1 }
+
+ty_list_rev:
+  | ty
+    { [$1] }
+  | ty_list_rev COMMA ty
+    { $3::$1 }
+
+ty_list:
+  | ty_list_rev
+    { List.rev $1 }
+
+arg:
+  | ty UID { ($1,$2) }
+
+arg_list_rev:
+  | //(* empty *)
+    { [] }
+  | arg
+    { [$1] }
+  | arg_list_rev COMMA arg
+    { $3::$1}
+
+arg_list:
+  | arg_list_rev
+    { List.rev $1 }
+
+operand:
+  | NULL
+    { Null }
+  | INT
+    { Const (int64 $1) }
+  | GID
+    { Gid $1 }
+  | UID
+    { Id $1 }
+
+ty_operand_list_rev:
+  | //(* empty *)
+    { [] }
+  | ty operand
+    { [($1,$2)] }
+  | ty_operand_list_rev COMMA ty operand
+    { ($3,$4)::$1 }
+
+ty_operand_list:
+  | ty_operand_list_rev
+    { List.rev $1 }
+
+i_operand_list_rev:
+  | //(* empty *)
+    { [] }
+  | I64 operand
+      { [$2] }
+  | I32 operand
+    { [$2] }
+  | i_operand_list_rev COMMA I64 operand
+    { $4::$1 }
+  | i_operand_list_rev COMMA I32 operand
+    { $4::$1}
+
+i_operand_list:
+  | i_operand_list_rev
+    { List.rev $1 }
+
+terminator:
+  | RET ty operand
+    { Ret ($2, Some $3) }
+  | RET ty
+    { Ret ($2, None) }
+  | BR LABEL UID
+    { Br $3 }
+  | BR I1 operand COMMA LABEL UID COMMA LABEL UID
+    { Cbr ($3,$6,$9) }
+
+block:
+  | insn_list terminator
+    { { insns = $1; terminator=$2 }  }
+
+block_list_rev:
+  |   { [] }  //(* empty *)
+  | block_list_rev LBL COLON block
+    { ($2,$4) :: $1 }
+
+block_list:
+  | block_list_rev
+    { List.rev $1}
+
+entry_block:
+  | ENTRY COLON block
+    { $3 }
+  | block
+    { $1 }
+
+bop:
+  | OR { Or }
+  | ADD { Add }
+  | SUB { Sub }
+  | MUL { Mul }
+  | SHL { Shl }
+  | XOR { Xor }      
+  | AND { And }
+  | LSHR { Lshr }
+  | ASHR { Ashr }
+
+cnd:
+  | EQ { Eq }
+  | NE { Ne }
+  | SLT { Slt }
+  | SLE { Sle }
+  | SGT { Sgt }
+  | SGE { Sge }
+
+insn:
+  | UID EQUALS bop ty operand COMMA operand
+    { ($1, Binop ($3,$4,$5,$7)) }
+  | UID EQUALS ALLOCA ty
+    { ($1, Alloca $4) }
+  | UID EQUALS LOAD ty COMMA ty operand
+    { ($1, Load ($6,$7)) }
+  | STORE ty operand COMMA ty operand
+    { (gensym "store", Store ($2,$3,$6)) }
+  | UID EQUALS ICMP cnd ty operand COMMA operand
+    { ($1, Icmp ($4,$5,$6,$8)) }
+  | CALL ty operand LPAREN ty_operand_list RPAREN
+    { (gensym "call", Call ($2,$3,$5)) }
+  | UID EQUALS CALL ty operand LPAREN ty_operand_list RPAREN
+    { ($1, Call ($4,$5,$7 )) }
+  | UID EQUALS BITCAST ty operand TO ty
+    { ($1, Bitcast ($4,$5,$7)) }
+  | UID EQUALS GEP ty COMMA ty operand COMMA i_operand_list
+    { ($1, Gep ($6,$7,$9)) }
+
+insn_list:
+  | {[]}
+  | insn insn_list 
+    { $1 :: $2 }
+
+gdecl_list_rev:
+  | //(* empty *)
+    { [] }
+  | ty ginit
+    { [($1,$2)] }
+  | gdecl_list_rev COMMA ty ginit
+    { ($3,$4)::$1 }
+
+gdecl_list:
+  | gdecl_list_rev
+    { List.rev $1 }
+
+ginit:
+  | NULL
+    { GNull }
+  | GID
+    { GGid $1 }
+  | INT
+    { GInt (int64 $1) }
+  | STRING
+    { GString $1 }
+  | LBRACKET gdecl_list RBRACKET
+    { GArray $2 }
+  | LBRACE gdecl_list RBRACE
+    { GStruct $2 }
